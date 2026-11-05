@@ -24,6 +24,7 @@ export interface Concept {
   missions?: Mission[]
   contact?: number
   source?: string
+  keyIdeas?: string
 }
 
 export interface Evaluation {
@@ -84,6 +85,7 @@ export interface HistEntry {
   n: number
   ok: number
   c: string
+  kind?: string
 }
 
 export interface FlashProg {
@@ -109,6 +111,47 @@ export interface ChapterCfg {
   fiche?: string
 }
 export type ChaptersCfg = Partial<Record<CourseKey, { chapters: ChapterCfg[] }>>
+
+/** Cours vu : résumé en une phrase, vidéo perso éventuelle. */
+export interface VideoInfo {
+  url?: string
+  sum?: string
+  seen?: boolean
+  d?: string
+}
+/** Vidéo de renfort proposée par le scan (ou « aucune »). */
+export interface VideoSugg {
+  url?: string
+  title?: string
+  channel?: string
+  mins?: number
+  why?: string
+  checked?: string
+  none?: boolean
+}
+export interface BlankRun {
+  d: string
+  p: number
+  loops?: number
+}
+/** Progression d'un chapitre : document `chprog/{COURSE}-{n}`. */
+export interface ChProg {
+  course: CourseKey
+  ch: number
+  video?: VideoInfo
+  videoSugg?: VideoSugg
+  points?: string[]
+  blank?: BlankRun[]
+  read?: Record<string, unknown>
+}
+export interface Reward {
+  t: string
+  k: CourseKey | 'ALL'
+  lvl: number
+}
+export interface RewardsDoc {
+  items: Reward[]
+}
 
 export interface BaselineRun {
   d: string

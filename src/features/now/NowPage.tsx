@@ -9,6 +9,8 @@ import { FL_GOAL, streak } from '../../domain/flash'
 import { dueList, lampadaire, reason } from '../../domain/priority'
 import { courseT0Now, weekDelta } from '../../domain/stats'
 import { COURSE_KEYS, COURSES } from '../../domain/types'
+import { SUBJ, focusList } from '../../domain/subjects'
+import { DueCard, FocusRows, SubjectPills, useSubjectCtx } from '../subjects/parts'
 import { BilanCard } from './BilanCard'
 import { ruleOfDay } from './rules'
 
@@ -44,6 +46,7 @@ function Focus() {
 
 export function NowPage() {
   const d = useAppData()
+  const sx = useSubjectCtx()
   const now = useNow()
   const t = today(now)
   const mode = eveningMode(now)
@@ -58,7 +61,8 @@ export function NowPage() {
 
   return (
     <div className="stack">
-      <div className="page-head"><h1>Maintenant</h1></div>
+      <SubjectPills current="now" />
+      <div className="page-head"><h1>Vue d’ensemble</h1></div>
       {mode === 'closed' && <div className="banner warn">Il est tard : Boussole est fermée. Dors, tu reprendras demain.</div>}
       {mode === 'readonly' && <div className="banner warn">Zone de repos : pas de travail de cours maintenant. Les chiffres restent visibles, rien à faire.</div>}
       {first && (
@@ -73,16 +77,24 @@ export function NowPage() {
         <div><b>{st}🔥</b><span>série</span></div>
         <div><b>{wd === null ? '—' : `${wd >= 0 ? '+' : ''}${wd}`}</b><span>pts / semaine</span></div>
       </div>
+      {mode === 'full' && <DueCard keys={SUBJ} all />}
+      {mode === 'full' && (
+        <div className="card lift">
+          <div className="eyebrow">Où concentrer tes efforts</div>
+          <p className="small muted" style={{ margin: '4px 0' }}>Les 3 chapitres les plus utiles maintenant, toutes matières confondues : niveau le plus bas, révision en retard, évaluation proche.</p>
+          <FocusRows list={focusList(SUBJ, sx, 3)} prefix />
+        </div>
+      )}
       {mode === 'full' && (
         <div className="card">
-          <div className="eyebrow">À faire maintenant</div>
+          <div className="eyebrow">Notions à revoir</div>
           {lamp ? (
             <ul className="next-steps">
               {[lamp, ...after].map((c, i) => (
                 <li key={c.id}>
                   <Chip course={c.course} />
                   <div><b>{c.name}</b><div className="why">{reason(c, d.evals, t)}</div></div>
-                  {i === 0 ? <Link className="btn primary" to="/review">Ouvrir</Link> : <span />}
+                  {i === 0 ? <Link className="btn primary" to={`/review?c=${encodeURIComponent(c.id)}`}>Ouvrir</Link> : <span />}
                 </li>
               ))}
             </ul>

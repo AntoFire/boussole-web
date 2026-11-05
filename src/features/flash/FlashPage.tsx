@@ -3,13 +3,14 @@ import { Chip } from '../../components/Chip'
 import { useToast } from '../../components/Toast'
 import { useAppData } from '../../data/appData'
 import { useStore } from '../../data/provider'
-import { addDays, today } from '../../domain/dates'
+import { today } from '../../domain/dates'
 import { BASE_PER, baselineAppend, baselineSample } from '../../domain/baseline'
 import { cascadePath, chCards, chLabel, chList, chOf } from '../../domain/chapters'
-import { FL_GOAL, FL_PASS, buildBlock, cardStateAfter, streak } from '../../domain/flash'
+import { FL_GOAL, FL_PASS, buildBlock, streak } from '../../domain/flash'
 import { statsAdd, statsPrune } from '../../domain/stats'
 import { COURSE_KEYS, COURSES, type BaselineDoc, type CourseKey, type FlashCard } from '../../domain/types'
 import { Drill, type DrillResult } from './Drill'
+import { useRecordFlash } from './useRecord'
 
 type Session =
   | { kind: 'block'; course: CourseKey; ch: number; cards: FlashCard[] }
@@ -21,6 +22,7 @@ export function FlashPage() {
   const d = useAppData()
   const store = useStore()
   const toast = useToast()
+  const record = useRecordFlash()
   const [mode, setMode] = useState<'cascade' | 'entry'>('cascade')
   const [session, setSession] = useState<Session | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
@@ -58,28 +60,7 @@ export function FlashPage() {
         await store.setDoc('stats/main', statsPrune(statsAdd(d.stats, day, s.course, n, ok, ms), day))
         return
       }
-      // Flash normal : Leitner + jour + historique + cascade
-      const cards = { ...prog.cards }
-      for (const r of results) cards[r.card.id] = cardStateAfter(cards[r.card.id], r.ok, day)
-      const next = { ...prog, cards, days: { ...prog.days, [day]: (prog.days[day] ?? 0) + n }, xp: prog.xp + ok * 10 }
-      const byCourse = new Map<CourseKey, DrillResult[]>()
-      for (const r of results) byCourse.set(r.card.course, [...(byCourse.get(r.card.course) ?? []), r])
-      let stats = d.stats
-      for (const [c, rs] of byCourse) {
-        const cok = rs.filter((r) => r.ok).length
-        next.hist = [...next.hist, { d: day, n: rs.length, ok: cok, c }].slice(-200)
-        stats = statsAdd(stats, day, c, rs.length, cok, rs.reduce((a, r) => a + r.ms, 0))
-      }
-      if (s.kind === 'block') {
-        const p = Math.round((ok / n) * 100)
-        next.cascade = { ...next.cascade, [s.course]: { ...(next.cascade[s.course] ?? {}), [String(s.ch)]: { p, ok: p >= FL_PASS * 100, d: day } } }
-      }
-      for (const r of results) {
-        const c = !r.ok && r.card.concept ? d.concepts.find((x) => x.id === r.card.concept) : undefined
-        if (c && c.status !== 'consolide') await store.updateDoc(`concepts/${c.id}`, { nextDue: addDays(day, 1) })
-      }
-      await store.setDoc('flashprog/main', next)
-      await store.setDoc('stats/main', statsPrune(stats!, day))
+      await record(results, s.kind === 'block' ? { course: s.course, ch: s.ch } : undefined)
     } catch (e) {
       toast('Enregistrement impossible : ' + (e as Error).message)
     }

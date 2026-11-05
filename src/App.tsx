@@ -6,6 +6,7 @@ import { FlashPage } from './features/flash/FlashPage'
 import { ReviewPage } from './features/review/ReviewPage'
 import { EvalsPage } from './features/evals/EvalsPage'
 import { DataPage } from './features/data/DataPage'
+import { SubjectPage } from './features/subjects/SubjectPage'
 
 export default function App() {
   const { ready } = useAppData()
@@ -20,6 +21,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<NowPage />} />
+        <Route path="m/:k" element={<SubjectPage />} />
         <Route path="flash" element={<FlashPage />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="evals" element={<EvalsPage />} />

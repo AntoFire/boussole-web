@@ -9,7 +9,10 @@ export async function createFirestoreStore(db: Firestore, uid: string): Promise<
     return fs.doc(db, 'users', uid, c, id)
   }
   const col = (name: string) => fs.collection(db, 'users', uid, name)
-  const COLLECTIONS = ['concepts', 'evals', 'flash', 'sources', 'flashcfg', 'flashprog', 'journal', 'baseline', 'stats', 'bilans']
+  const COLLECTIONS = [
+    'concepts', 'evals', 'flash', 'sources', 'flashcfg', 'flashprog', 'journal', 'baseline', 'stats', 'bilans',
+    'chprog', 'rewards', 'exam', 'examrun', 'exambank', 'exampm',
+  ]
 
   return {
     kind: 'firebase',
@@ -49,8 +52,12 @@ export async function createFirestoreStore(db: Firestore, uid: string): Promise<
       return out
     },
     async importAll(dump) {
-      for (const [name, docs] of Object.entries(dump)) {
-        for (const [id, data] of Object.entries(docs)) await fs.setDoc(fs.doc(db, 'users', uid, name, id), clean(data))
+      // par lots de 400 écritures (limite Firestore : 500 par lot)
+      const all = Object.entries(dump).flatMap(([name, docs]) => Object.entries(docs).map(([id, data]) => ({ name, id, data })))
+      for (let i = 0; i < all.length; i += 400) {
+        const b = fs.writeBatch(db)
+        for (const { name, id, data } of all.slice(i, i + 400)) b.set(fs.doc(db, 'users', uid, name, id), clean(data as object))
+        await b.commit()
       }
     },
   }

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Chip } from '../../components/Chip'
 import { useAppData } from '../../data/appData'
 import { chLabel } from '../../domain/chapters'
@@ -10,7 +11,14 @@ import { ConceptSheet } from './ConceptSheet'
 
 export function ReviewPage() {
   const { concepts, flash, sources, chcfg } = useAppData()
-  const [openId, setOpenId] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const openId = params.get('c')
+  const setOpenId = (id: string | null) => {
+    const p = new URLSearchParams(params)
+    if (id) p.set('c', id)
+    else p.delete('c')
+    setParams(p, { replace: !id })
+  }
   const [onlyDue, setOnlyDue] = useState(false)
   const t = today()
   const open = concepts.find((c) => c.id === openId) ?? null
