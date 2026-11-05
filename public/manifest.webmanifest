@@ -1,0 +1,11 @@
+{
+  "name": "Boussole",
+  "short_name": "Boussole",
+  "description": "OS d'apprentissage personnel pour le DESS IA",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F5F2",
+  "theme_color": "#2C47C7",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
