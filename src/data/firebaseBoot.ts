@@ -22,7 +22,9 @@ function init(): FirebaseApp {
 }
 
 export function db(): Firestore {
-  if (!firestore) firestore = initializeFirestore(init(), { localCache: persistentLocalCache() })
+  // base nommée (ex. « boussole ») si VITE_FIREBASE_DATABASE_ID est renseigné, sinon la base « (default) »
+  const dbId = (import.meta.env.VITE_FIREBASE_DATABASE_ID as string | undefined) || '(default)'
+  if (!firestore) firestore = initializeFirestore(init(), { localCache: persistentLocalCache() }, dbId)
   return firestore
 }
 export const watchAuth = (cb: (u: User | null) => void) => onAuthStateChanged(getAuth(init()), cb)

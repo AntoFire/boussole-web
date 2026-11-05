@@ -5,10 +5,10 @@
 ## 1. Console Firebase (déjà fait si tu as suivi le guide du 5 novembre)
 
 1. Projet `boussole-antonin`, sans Google Analytics.
-2. Forfait **Blaze** + alerte de budget à 1 $ (Google Cloud → Facturation → Budgets et alertes). L'alerte prévient par e-mail, elle ne bloque pas.
+2. Forfait **Blaze** + budget mensuel de 5 € avec alertes à 50, 90 et 100 % (Google Cloud → Facturation → Budgets & caps). L'alerte prévient par e-mail ; un « plafond de dépenses » peut en plus mettre les services en pause.
 3. **Authentication** → Google activé.
-4. **Firestore** : mode production, région `northamerica-northeast1` (Montréal).
-5. **Storage** : même région.
+4. **Firestore** : base nommée `boussole`, mode production, région `northamerica-northeast1` (Montréal). Le nom de la base va dans `VITE_FIREBASE_DATABASE_ID` et dans `firebase.json`.
+5. **Storage** : bucket `boussole-antonin.firebasestorage.app`, emplacement sans frais `US-EAST1` (Montréal n'a pas de quota gratuit pour Storage).
 6. **Paramètres du projet → Vos applications → Web** : garder le bloc `firebaseConfig`.
 
 ## 2. Le code sur ton Mac, hors iCloud
@@ -21,7 +21,7 @@ git clone https://github.com/AntoFire/boussole-web.git
 cd boussole-web
 npm ci
 cp .env.example .env.local
-open -e .env.local   # colle les valeurs de firebaseConfig (apiKey, authDomain, projectId, storageBucket, appId)
+open -e .env.local   # colle les valeurs de firebaseConfig (apiKey, authDomain, projectId, storageBucket, appId) ; VITE_FIREBASE_DATABASE_ID=boussole
 ```
 
 ## 3. Lier le projet et déployer les règles
