@@ -59,10 +59,34 @@ L'appli est sur `https://boussole-antonin.web.app`. Sur iPhone : Safari → Part
 
 À ton volume (un utilisateur), tout reste dans la part gratuite de Blaze : Firestore (50 000 lectures / jour), Storage (5 Go), Hosting (10 Go / mois), Functions (2 millions d'appels / mois).
 
-## Phase 2 : clé OpenRouter
+## Phase 2 : IA (Cloud Function `ai`)
 
-La clé ne va jamais dans `.env.local` ni dans le dépôt. Elle est enregistrée côté serveur, depuis ton terminal :
+Chaîne : appli → fonction `ai` (région `northamerica-northeast1`) → OpenRouter. La clé n'existe que côté serveur.
 
+### Ce que la fonction vérifie à chaque appel
+1. (si activé) un jeton App Check valide ;
+2. une connexion Firebase, et que l'UID du jeton est celui de `OWNER_UID` (variable **du serveur** ; `VITE_OWNER_UID` côté appli n'est qu'un confort d'interface et ne protège rien). Sans `OWNER_UID`, la fonction refuse tout le monde ;
+3. la forme de la requête (Zod, champs inconnus refusés) ;
+4. le quota : `AI_LIMIT_PER_MIN` (5) et `AI_LIMIT_PER_DAY` (40), compteurs dans `aiUsage/{uid}`. Ce document n'est écrit que par le serveur (SDK Admin) ; les règles Firestore, qui refusent tout hors `users/{uid}/**`, n'ont pas changé.
+
+Les journaux contiennent la tâche, la durée, les nombres de tokens et un code d'erreur, jamais le texte des cours, ni la clé, ni l'UID complet.
+
+### Mise en place (une fois)
 ```bash
-npx firebase-tools functions:secrets:set OPENROUTER_API_KEY
+npx firebase-tools functions:secrets:set OPENROUTER_API_KEY   # colle la clé OpenRouter quand le terminal la demande
+cp functions/.env.example functions/.env                       # puis renseigne OWNER_UID (Authentication → Utilisateurs)
+npx firebase-tools deploy --only functions
 ```
+Puis dans l'appli (connecté avec `VITE_DATA_BACKEND=firebase`) : **Données → Assistant IA → Tester la connexion IA**.
+
+Changer de modèle : modifier `AI_MODEL` dans `functions/.env` et redéployer les fonctions, sans toucher au code.
+
+### Coûts à connaître
+- Functions et Secret Manager exigent Blaze. Les appels restent dans la part gratuite à ton volume, mais les images de fonctions (Artifact Registry / Cloud Build) et les accès au secret peuvent coûter quelques centimes.
+- L'alerte de budget **prévient seulement** ; les plafonds ci-dessus et `maxInstances: 2` sont les vraies limites.
+- Le modèle `:free` a ses propres quotas côté OpenRouter, et ses prompts peuvent être conservés par le fournisseur.
+
+### App Check (recommandé, à faire en dernier)
+1. Console Firebase → App Check → Applis → Web → reCAPTCHA v3 : copie la clé de site dans `VITE_APPCHECK_SITE_KEY`.
+2. En développement, `npm run dev` affiche un jeton de debug dans la console du navigateur : enregistre-le (App Check → Applis → Gérer les jetons de debug).
+3. Une fois l'appli redéployée et le test IA OK, mets `AI_ENFORCE_APPCHECK=true` dans `functions/.env` et redéploie les fonctions.
