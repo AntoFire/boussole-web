@@ -2,6 +2,12 @@ export type Unsubscribe = () => void
 export type WithId<T> = T & { id: string }
 export type Dump = Record<string, Record<string, unknown>>
 
+/** Collections de Boussole (les mêmes que l'artifact). */
+export const KNOWN_COLLECTIONS = [
+  'concepts', 'evals', 'flash', 'sources', 'flashcfg', 'flashprog', 'journal', 'baseline', 'stats', 'bilans',
+  'chprog', 'rewards', 'exam', 'examrun', 'exambank', 'exampm',
+] as const
+
 /** Accès aux données. Les chemins sont de la forme « collection/id ». */
 export interface DataStore {
   readonly kind: 'local' | 'firebase'

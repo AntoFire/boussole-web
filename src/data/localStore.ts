@@ -111,8 +111,9 @@ export class LocalStore implements DataStore {
   async exportAll(): Promise<Dump> {
     return clean(this.data)
   }
+  /** Comme Firestore : remplace les documents de même identifiant, garde les autres. */
   async importAll(dump: Dump): Promise<void> {
-    this.data = clean(dump)
+    for (const [c, docs] of Object.entries(clean(dump))) this.data[c] = { ...(this.data[c] ?? {}), ...docs }
     this.emit()
   }
 }

@@ -42,7 +42,9 @@ Règles : seul ton compte lit et écrit `users/{ton uid}/…` (Firestore) et tes
 
 ## 5. Importer tes données
 
-Page **Données → Importer un JSON**, avec l'export complet de la Boussole actuelle (format `{collection: {id: document}}`). L'export complet sera ajouté à l'artifact au moment de la bascule.
+1. Dans l'artifact Boussole : **Données → Tout exporter**. Le fichier `boussole-complet-AAAA-MM-JJ.json` contient toutes les collections (format `{_meta, collection: {id: document}}`), et l'artifact affiche le nombre de documents par collection.
+2. Dans l'appli : **Données → Importer un JSON**. L'appli affiche ce qu'elle va écrire (mêmes nombres) et ce qu'elle laisse de côté, puis importe après confirmation. Les documents de même identifiant sont remplacés, les autres gardés : relancer l'import ne crée pas de doublons.
+3. L'ancien export partiel de l'artifact (notions, échéances, journal) est aussi accepté.
 
 ## 6. Mettre en ligne
 

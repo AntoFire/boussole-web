@@ -59,8 +59,8 @@ describe('LocalStore', () => {
     const s = new LocalStore({ concepts: { a: { n: 1 }, b: { n: 2 } } }, memStorage())
     await s.deleteDoc('concepts/a')
     expect(await s.exportAll()).toEqual({ concepts: { b: { n: 2 } } })
-    await s.importAll({ evals: { e: { t: 1 } } })
-    expect(await s.exportAll()).toEqual({ evals: { e: { t: 1 } } })
+    await s.importAll({ evals: { e: { t: 1 } }, concepts: { b: { n: 3 }, c: { n: 4 } } })
+    expect(await s.exportAll()).toEqual({ concepts: { b: { n: 3 }, c: { n: 4 } }, evals: { e: { t: 1 } } })
   })
   it('les documents lus sont des copies (pas de mutation involontaire)', async () => {
     const s = new LocalStore({ concepts: { a: { n: 1 } } }, memStorage())

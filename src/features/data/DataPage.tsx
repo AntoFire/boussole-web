@@ -1,13 +1,29 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useToast } from '../../components/Toast'
 import { useStore } from '../../data/provider'
 import { LocalStore } from '../../data/localStore'
-import type { Dump } from '../../data/store'
+import { planImport, type ImportPlan } from '../../data/importDump'
+
+const LABELS: Record<string, string> = {
+  concepts: 'notions', evals: 'échéances', flash: 'cartes Flash', sources: 'sources', flashcfg: 'réglages des chapitres',
+  flashprog: 'progression Flash', journal: 'journal', chprog: 'chapitres', rewards: 'récompenses', exam: 'examens',
+  examrun: 'simulations', exambank: 'banque d’exercices', exampm: 'bilans d’examen', baseline: 'tests de départ',
+  stats: 'statistiques', bilans: 'bilans',
+}
+
+function fmtDate(iso: string | null) {
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleString('fr-CA', { dateStyle: 'long', timeStyle: 'short' })
+}
 
 export function DataPage() {
   const store = useStore()
   const toast = useToast()
   const file = useRef<HTMLInputElement>(null)
+  const [plan, setPlan] = useState<(ImportPlan & { file: string }) | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState<string | null>(null)
 
   const exportJson = async () => {
     const dump = await store.exportAll()
@@ -18,17 +34,30 @@ export function DataPage() {
     URL.revokeObjectURL(a.href)
     toast('Export téléchargé')
   }
-  const importJson = async (f: File) => {
+  const readFile = async (f: File) => {
+    setDone(null)
     try {
-      const dump = JSON.parse(await f.text()) as Dump
-      if (typeof dump !== 'object' || dump === null || Array.isArray(dump)) throw new Error('Format inattendu')
-      if (!confirm('Importer ce fichier remplacera les documents portant le même identifiant. Continuer ?')) return
-      await store.importAll(dump)
-      toast('Import terminé')
+      setPlan({ ...planImport(JSON.parse(await f.text())), file: f.name })
     } catch (e) {
-      toast('Import impossible : ' + (e as Error).message)
+      setPlan(null)
+      toast('Fichier illisible : ' + (e as Error).message)
     }
   }
+  const runImport = async () => {
+    if (!plan) return
+    setBusy(true)
+    try {
+      await store.importAll(plan.dump)
+      setDone(`${plan.total} documents importés depuis ${plan.file}.`)
+      setPlan(null)
+      toast('Import terminé')
+    } catch (e) {
+      toast('Import interrompu : ' + (e as Error).message + '. Tu peux relancer, les documents déjà écrits seront simplement remplacés.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  const when = fmtDate(plan?.exportedAt ?? null)
   return (
     <div className="stack">
       <div className="page-head"><h1>Données</h1></div>
@@ -38,12 +67,36 @@ export function DataPage() {
       </div>
       <div className="card stack-sm">
         <div className="eyebrow">Sauvegarde</div>
+        <p className="small muted" style={{ margin: 0 }}>Pour reprendre tes données de l’ancienne Boussole : dans l’artifact, Données → Tout exporter, puis importe ce fichier ici.</p>
         <div className="row">
           <button className="btn primary" onClick={() => void exportJson()}>Exporter en JSON</button>
           <button className="btn" onClick={() => file.current?.click()}>Importer un JSON</button>
-          <input ref={file} type="file" accept="application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void importJson(f); e.target.value = '' }} />
+          <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f); e.target.value = '' }} />
         </div>
+        {done && <div className="banner info" style={{ margin: 0 }}>{done}</div>}
       </div>
+      {plan && (
+        <div className="card stack-sm">
+          <div className="eyebrow">À importer</div>
+          <p style={{ margin: 0 }}>
+            <b>{plan.total} documents</b> dans {plan.file}{when ? `, exporté le ${when}` : ''}.
+          </p>
+          <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
+            {Object.entries(plan.counts).map(([k, n]) => <li key={k}>{LABELS[k] ?? k} : {n}</li>)}
+          </ul>
+          {plan.skipped.length > 0 && (
+            <details className="small">
+              <summary>{plan.skipped.length} élément{plan.skipped.length > 1 ? 's' : ''} laissé{plan.skipped.length > 1 ? 's' : ''} de côté</summary>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{plan.skipped.slice(0, 30).map((s) => <li key={s}>{s}</li>)}</ul>
+            </details>
+          )}
+          <p className="small muted" style={{ margin: 0 }}>Les documents de même identifiant sont remplacés, les autres sont gardés.</p>
+          <div className="row">
+            <button className="btn primary" disabled={busy} onClick={() => void runImport()}>{busy ? 'Import…' : `Importer ${plan.total} documents`}</button>
+            <button className="btn ghost" disabled={busy} onClick={() => setPlan(null)}>Annuler</button>
+          </div>
+        </div>
+      )}
       {store instanceof LocalStore && (
         <div className="card stack-sm">
           <div className="eyebrow">Démo</div>

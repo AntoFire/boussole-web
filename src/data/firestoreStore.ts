@@ -1,5 +1,6 @@
 import type { Firestore } from 'firebase/firestore'
-import { clean, splitPath, type DataStore, type Dump, type Unsubscribe, type WithId } from './store'
+import { chunkWrites } from './importDump'
+import { KNOWN_COLLECTIONS, clean, splitPath, type DataStore, type Dump, type Unsubscribe, type WithId } from './store'
 
 /** Backend Firestore : chemins users/{uid}/{collection}/{id}. Chargé à la demande (import dynamique). */
 export async function createFirestoreStore(db: Firestore, uid: string): Promise<DataStore> {
@@ -9,10 +10,6 @@ export async function createFirestoreStore(db: Firestore, uid: string): Promise<
     return fs.doc(db, 'users', uid, c, id)
   }
   const col = (name: string) => fs.collection(db, 'users', uid, name)
-  const COLLECTIONS = [
-    'concepts', 'evals', 'flash', 'sources', 'flashcfg', 'flashprog', 'journal', 'baseline', 'stats', 'bilans',
-    'chprog', 'rewards', 'exam', 'examrun', 'exambank', 'exampm',
-  ]
 
   return {
     kind: 'firebase',
@@ -45,18 +42,17 @@ export async function createFirestoreStore(db: Firestore, uid: string): Promise<
     },
     async exportAll() {
       const out: Dump = {}
-      for (const name of COLLECTIONS) {
+      for (const name of KNOWN_COLLECTIONS) {
         const s = await fs.getDocs(col(name))
         out[name] = Object.fromEntries(s.docs.map((d) => [d.id, d.data()]))
       }
       return out
     },
     async importAll(dump) {
-      // par lots de 400 écritures (limite Firestore : 500 par lot)
-      const all = Object.entries(dump).flatMap(([name, docs]) => Object.entries(docs).map(([id, data]) => ({ name, id, data })))
-      for (let i = 0; i < all.length; i += 400) {
+      // par lots de 400 écritures et ~4 Mo (limites Firestore : 500 écritures et 10 Mio par requête)
+      for (const batch of chunkWrites(dump)) {
         const b = fs.writeBatch(db)
-        for (const { name, id, data } of all.slice(i, i + 400)) b.set(fs.doc(db, 'users', uid, name, id), clean(data as object))
+        for (const { name, id, data } of batch) b.set(fs.doc(db, 'users', uid, name, id), clean(data as object))
         await b.commit()
       }
     },
