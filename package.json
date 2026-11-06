@@ -11,13 +11,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "node scripts/build-seed.mjs",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "test:functions": "npm --prefix functions test"
   },
   "dependencies": {
     "firebase": "^12.19.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",

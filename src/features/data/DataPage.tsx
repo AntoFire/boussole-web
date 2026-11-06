@@ -3,6 +3,8 @@ import { useToast } from '../../components/Toast'
 import { useStore } from '../../data/provider'
 import { LocalStore } from '../../data/localStore'
 import { planImport, type ImportPlan } from '../../data/importDump'
+import { callAi } from '../../ai/client'
+import { toAiError } from '../../ai/errors'
 
 const LABELS: Record<string, string> = {
   concepts: 'notions', evals: 'échéances', flash: 'cartes Flash', sources: 'sources', flashcfg: 'réglages des chapitres',
@@ -24,6 +26,7 @@ export function DataPage() {
   const [plan, setPlan] = useState<(ImportPlan & { file: string }) | null>(null)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<string | null>(null)
+  const [aiTest, setAiTest] = useState<{ busy: boolean; msg?: string; bad?: boolean }>({ busy: false })
 
   const exportJson = async () => {
     const dump = await store.exportAll()
@@ -57,6 +60,15 @@ export function DataPage() {
       setBusy(false)
     }
   }
+  const testAi = async () => {
+    setAiTest({ busy: true })
+    try {
+      const r = await callAi({ task: 'ping' })
+      setAiTest({ busy: false, msg: `Connexion OK · ${r.model} · ${(r.ms / 1000).toFixed(1)} s` })
+    } catch (e) {
+      setAiTest({ busy: false, bad: true, msg: toAiError(e).message })
+    }
+  }
   const when = fmtDate(plan?.exportedAt ?? null)
   return (
     <div className="stack">
@@ -75,6 +87,16 @@ export function DataPage() {
         </div>
         {done && <div className="banner info" style={{ margin: 0 }}>{done}</div>}
       </div>
+      {store.kind === 'firebase' && (
+        <div className="card stack-sm">
+          <div className="eyebrow">Assistant IA</div>
+          <p className="small muted" style={{ margin: 0 }}>Vérifie que la fonction IA répond (clé, modèle et quotas sont gérés côté serveur).</p>
+          <div className="row">
+            <button className="btn" disabled={aiTest.busy} onClick={() => void testAi()}>{aiTest.busy ? 'Test…' : 'Tester la connexion IA'}</button>
+          </div>
+          {aiTest.msg && <div className={`banner ${aiTest.bad ? 'bad' : 'info'}`} style={{ margin: 0 }} role="status">{aiTest.msg}</div>}
+        </div>
+      )}
       {plan && (
         <div className="card stack-sm">
           <div className="eyebrow">À importer</div>
