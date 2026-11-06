@@ -30,7 +30,7 @@ function toHttps(e: unknown): HttpsError {
     if (e.code === 'rate-limited') return new HttpsError('resource-exhausted', 'Quota du modèle atteint', { reason: 'model' })
     if (e.code === 'timeout') return new HttpsError('deadline-exceeded', 'Le modèle a mis trop de temps')
     if (e.code === 'empty') return new HttpsError('unavailable', 'Réponse vide du modèle', { reason: 'empty' })
-    return new HttpsError('unavailable', 'Le modèle est indisponible', { reason: 'upstream', status: e.status })
+    return new HttpsError('unavailable', 'Le modèle est indisponible', { reason: 'upstream', status: e.status, detail: e.detail })
   }
   return new HttpsError('internal', 'Erreur interne')
 }
@@ -58,7 +58,7 @@ export const ai = onCall(
       }
     } catch (e) {
       const err = toHttps(e)
-      logger.warn('ai', { task, ms: Date.now() - t0, ok: false, code: err.code, llm: e instanceof LlmError ? { code: e.code, status: e.status } : undefined })
+      logger.warn('ai', { task, ms: Date.now() - t0, ok: false, code: err.code, llm: e instanceof LlmError ? { code: e.code, status: e.status, detail: e.detail } : undefined })
       throw err
     }
   },
