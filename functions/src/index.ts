@@ -2,8 +2,9 @@ import { initializeApp, getApp, getApps } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import { AI_DB_ID, AI_MODEL, ENFORCE_APPCHECK, LIMIT_PER_DAY, LIMIT_PER_MIN, OPENROUTER_API_KEY, OWNER_UID, QUOTA_TZ, REGION } from './config.js'
+import { AI_DB_ID, AI_MODEL, AI_MODEL_FALLBACK, ENFORCE_APPCHECK, LIMIT_PER_DAY, LIMIT_PER_MIN, OPENROUTER_API_KEY, OWNER_UID, QUOTA_TZ, REGION } from './config.js'
 import { assertAllowed } from './guard.js'
+import { withFallback } from './llm/fallback.js'
 import { createOpenRouter } from './llm/openrouter.js'
 import { LlmError, type LlmProvider } from './llm/provider.js'
 import { AiRequest } from './schemas.js'
@@ -48,7 +49,10 @@ export const ai = onCall(
       const req = parsed.data
       task = req.task
       await reserve(uid)
-      const llm: LlmProvider = createOpenRouter({ apiKey: OPENROUTER_API_KEY.value(), model: AI_MODEL.value() })
+      const apiKey = OPENROUTER_API_KEY.value()
+      const main = createOpenRouter({ apiKey, model: AI_MODEL.value() })
+      const spare = AI_MODEL_FALLBACK.value()
+      const llm: LlmProvider = spare && spare !== AI_MODEL.value() ? withFallback(main, createOpenRouter({ apiKey, model: spare })) : main
       switch (req.task) {
         case 'ping': {
           const r = await llm.complete({ messages: [{ role: 'user', content: 'Réponds uniquement par le mot : pong' }], maxTokens: 512, temperature: 0 })
