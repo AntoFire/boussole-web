@@ -4,7 +4,7 @@ export const REGION = 'northamerica-northeast1' // même région que Firestore
 export const OPENROUTER_API_KEY = defineSecret('OPENROUTER_API_KEY')
 /** UID du propriétaire : seule source de vérité des droits (VITE_OWNER_UID côté appli n'est qu'un confort d'interface). */
 export const OWNER_UID = defineString('OWNER_UID')
-export const AI_MODEL = defineString('AI_MODEL', { default: 'qwen/qwen3.8-27b:free' })
+export const AI_MODEL = defineString('AI_MODEL', { default: 'google/gemma-4-31b-it:free' })
 export const AI_DB_ID = defineString('AI_DB_ID', { default: 'boussole' })
 export const LIMIT_PER_MIN = defineInt('AI_LIMIT_PER_MIN', { default: 5 })
 export const LIMIT_PER_DAY = defineInt('AI_LIMIT_PER_DAY', { default: 40 })
