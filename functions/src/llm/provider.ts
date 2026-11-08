@@ -28,12 +28,15 @@ export type LlmErrorCode = 'rate-limited' | 'timeout' | 'upstream' | 'empty'
 
 /** Erreur du fournisseur. Le message ne contient jamais de corps de réponse ni de clé. */
 export class LlmError extends Error {
-  constructor(
-    readonly code: LlmErrorCode,
-    message: string,
-    readonly status?: number,
-  ) {
+  readonly code: LlmErrorCode
+  readonly status?: number
+  /** Message court renvoyé par le fournisseur (jamais la clé ni le contenu envoyé) */
+  readonly detail?: string
+  constructor(code: LlmErrorCode, message: string, status?: number, detail?: string) {
     super(message)
     this.name = 'LlmError'
+    this.code = code
+    this.status = status
+    this.detail = detail
   }
 }

@@ -33,6 +33,11 @@ describe('openrouter', () => {
     expect((await fail(make((async () => json({ error: { code: 429 } })) as typeof fetch).complete(req))).code).toBe('rate-limited')
     expect((await fail(make((async () => json({ choices: [{ message: { content: '' } }] })) as typeof fetch).complete(req))).code).toBe('empty')
   })
+  it('garde le message du fournisseur sans la clé', async () => {
+    const e = await fail(make((async () => json({ error: { code: 404, message: 'No endpoints found matching your data policy' } }, 404)) as typeof fetch).complete(req))
+    expect(e).toMatchObject({ code: 'upstream', status: 404, detail: 'No endpoints found matching your data policy' })
+    expect(JSON.stringify(e)).not.toContain('sk-secret')
+  })
   it('expire sur délai dépassé sans fuir la clé', async () => {
     const slow = ((_u: string, init: RequestInit) => new Promise((_res, rej) => init.signal!.addEventListener('abort', () => rej(Object.assign(new Error('x'), { name: 'AbortError' }))))) as unknown as typeof fetch
     const e = await fail(make(slow).complete({ ...req, timeoutMs: 10 }))

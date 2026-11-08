@@ -28,7 +28,8 @@ const MESSAGES: Record<AiErrorKind, string> = {
 export function toAiError(e: unknown): AiError {
   if (e instanceof AiError) return e
   const code = String((e as { code?: unknown })?.code ?? '').replace('functions/', '')
-  const reason = (e as { details?: { reason?: unknown } })?.details?.reason
+  const details = (e as { details?: { reason?: unknown; status?: unknown; detail?: unknown } })?.details
+  const reason = details?.reason
   const kind: AiErrorKind =
     code === 'unauthenticated' ? 'auth'
     : code === 'permission-denied' ? 'denied'
@@ -38,7 +39,9 @@ export function toAiError(e: unknown): AiError {
     : code === 'invalid-argument' ? 'invalid'
     : code === 'failed-precondition' ? 'denied'
     : 'unknown'
-  return new AiError(kind, MESSAGES[kind])
+  // précision utile au diagnostic : réponse vide, ou code HTTP renvoyé par le fournisseur
+  const extra = kind !== 'unavailable' ? '' : reason === 'empty' ? ' (réponse vide)' : typeof details?.status === 'number' ? ` (code ${details.status}${typeof details.detail === 'string' ? ` : ${details.detail}` : ''})` : ''
+  return new AiError(kind, MESSAGES[kind] + extra)
 }
 
 export const aiMessage = (k: AiErrorKind) => MESSAGES[k]

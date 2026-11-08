@@ -29,8 +29,8 @@ function toHttps(e: unknown): HttpsError {
   if (e instanceof LlmError) {
     if (e.code === 'rate-limited') return new HttpsError('resource-exhausted', 'Quota du modèle atteint', { reason: 'model' })
     if (e.code === 'timeout') return new HttpsError('deadline-exceeded', 'Le modèle a mis trop de temps')
-    if (e.code === 'empty') return new HttpsError('unavailable', 'Réponse vide du modèle')
-    return new HttpsError('unavailable', 'Le modèle est indisponible')
+    if (e.code === 'empty') return new HttpsError('unavailable', 'Réponse vide du modèle', { reason: 'empty' })
+    return new HttpsError('unavailable', 'Le modèle est indisponible', { reason: 'upstream', status: e.status, detail: e.detail })
   }
   return new HttpsError('internal', 'Erreur interne')
 }
@@ -51,14 +51,14 @@ export const ai = onCall(
       const llm: LlmProvider = createOpenRouter({ apiKey: OPENROUTER_API_KEY.value(), model: AI_MODEL.value() })
       switch (req.task) {
         case 'ping': {
-          const r = await llm.complete({ messages: [{ role: 'user', content: 'Réponds uniquement par le mot : pong' }], maxTokens: 64, temperature: 0 })
+          const r = await llm.complete({ messages: [{ role: 'user', content: 'Réponds uniquement par le mot : pong' }], maxTokens: 512, temperature: 0 })
           logger.info('ai', { task, ms: Date.now() - t0, ok: true, promptTokens: r.promptTokens, completionTokens: r.completionTokens })
           return { task: 'ping' as const, text: r.text.slice(0, 200), model: r.model, ms: Date.now() - t0 }
         }
       }
     } catch (e) {
       const err = toHttps(e)
-      logger.warn('ai', { task, ms: Date.now() - t0, ok: false, code: err.code })
+      logger.warn('ai', { task, ms: Date.now() - t0, ok: false, code: err.code, llm: e instanceof LlmError ? { code: e.code, status: e.status, detail: e.detail } : undefined })
       throw err
     }
   },

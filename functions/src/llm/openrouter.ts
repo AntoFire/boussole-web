@@ -13,13 +13,15 @@ interface ApiBody {
   model?: string
   choices?: { message?: { content?: string | null } }[]
   usage?: { prompt_tokens?: number; completion_tokens?: number }
-  error?: { code?: number | string }
+  error?: { code?: number | string; message?: string }
 }
 
 /** Retire les blocs de raisonnement que certains modèles laissent dans la réponse. */
 export function stripThinking(s: string): string {
   return s.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
 }
+
+const short = (m: unknown) => (typeof m === 'string' ? m.replace(/\s+/g, ' ').slice(0, 160) : undefined)
 
 export function createOpenRouter(o: OpenRouterOptions): LlmProvider {
   const doFetch = o.fetchImpl ?? fetch
@@ -52,12 +54,12 @@ export function createOpenRouter(o: OpenRouterOptions): LlmProvider {
         clearTimeout(timer)
       }
       if (res.status === 429) throw new LlmError('rate-limited', 'Quota du modèle atteint', 429)
-      if (!res.ok) throw new LlmError('upstream', `Le fournisseur a répondu ${res.status}`, res.status)
       const body = (await res.json().catch(() => null)) as ApiBody | null
+      if (!res.ok) throw new LlmError('upstream', `Le fournisseur a répondu ${res.status}`, res.status, short(body?.error?.message))
       // OpenRouter peut répondre 200 avec un objet { error } (modèle indisponible, limite amont…)
       if (body?.error) {
         const limited = body.error.code === 429
-        throw new LlmError(limited ? 'rate-limited' : 'upstream', limited ? 'Quota du modèle atteint' : 'Erreur du fournisseur', Number(body.error.code) || undefined)
+        throw new LlmError(limited ? 'rate-limited' : 'upstream', limited ? 'Quota du modèle atteint' : 'Erreur du fournisseur', Number(body.error.code) || undefined, short(body.error.message))
       }
       const text = stripThinking(body?.choices?.[0]?.message?.content ?? '')
       if (!text) throw new LlmError('empty', 'Réponse vide du modèle')

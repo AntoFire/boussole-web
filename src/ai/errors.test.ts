@@ -17,6 +17,12 @@ describe('toAiError', () => {
     expect(k('resource-exhausted', 'model')).toBe('model-quota')
     expect(k('resource-exhausted', 'minute')).toBe('rate')
   })
+  it('précise la cause quand le modèle est indisponible', () => {
+    expect(toAiError({ code: 'functions/unavailable', details: { reason: 'upstream', status: 404 } }).message).toContain('code 404')
+    expect(toAiError({ code: 'functions/unavailable', details: { reason: 'upstream', status: 404, detail: 'data policy' } }).message).toContain('data policy')
+    expect(toAiError({ code: 'functions/unavailable', details: { reason: 'empty' } }).message).toContain('réponse vide')
+    expect(toAiError({ code: 'functions/unavailable' }).message).not.toContain('(')
+  })
   it('garde une AiError telle quelle et ne fuit rien d’une erreur inconnue', () => {
     const a = new AiError('local', 'x')
     expect(toAiError(a)).toBe(a)
