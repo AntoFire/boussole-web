@@ -53,8 +53,8 @@ export function createOpenRouter(o: OpenRouterOptions): LlmProvider {
       } finally {
         clearTimeout(timer)
       }
-      if (res.status === 429) throw new LlmError('rate-limited', 'Quota du modèle atteint', 429)
       const body = (await res.json().catch(() => null)) as ApiBody | null
+      if (res.status === 429) throw new LlmError('rate-limited', 'Quota du modèle atteint', 429, short(body?.error?.message))
       if (!res.ok) throw new LlmError('upstream', `Le fournisseur a répondu ${res.status}`, res.status, short(body?.error?.message))
       // OpenRouter peut répondre 200 avec un objet { error } (modèle indisponible, limite amont…)
       if (body?.error) {

@@ -28,7 +28,7 @@ async function reserve(uid: string): Promise<void> {
 function toHttps(e: unknown): HttpsError {
   if (e instanceof HttpsError) return e
   if (e instanceof LlmError) {
-    if (e.code === 'rate-limited') return new HttpsError('resource-exhausted', 'Quota du modèle atteint', { reason: 'model' })
+    if (e.code === 'rate-limited') return new HttpsError('resource-exhausted', 'Quota du modèle atteint', { reason: 'model', detail: e.detail })
     if (e.code === 'timeout') return new HttpsError('deadline-exceeded', 'Le modèle a mis trop de temps')
     if (e.code === 'empty') return new HttpsError('unavailable', 'Réponse vide du modèle', { reason: 'empty' })
     return new HttpsError('unavailable', 'Le modèle est indisponible', { reason: 'upstream', status: e.status, detail: e.detail })

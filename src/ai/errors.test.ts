@@ -23,6 +23,9 @@ describe('toAiError', () => {
     expect(toAiError({ code: 'functions/unavailable', details: { reason: 'empty' } }).message).toContain('réponse vide')
     expect(toAiError({ code: 'functions/unavailable' }).message).not.toContain('(')
   })
+  it('ajoute le détail du fournisseur au quota du modèle', () => {
+    expect(toAiError({ code: 'functions/resource-exhausted', details: { reason: 'model', detail: 'free-models-per-day' } }).message).toContain('free-models-per-day')
+  })
   it('garde une AiError telle quelle et ne fuit rien d’une erreur inconnue', () => {
     const a = new AiError('local', 'x')
     expect(toAiError(a)).toBe(a)

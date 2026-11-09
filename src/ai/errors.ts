@@ -41,7 +41,8 @@ export function toAiError(e: unknown): AiError {
     : 'unknown'
   // précision utile au diagnostic : réponse vide, ou code HTTP renvoyé par le fournisseur
   const extra = kind !== 'unavailable' ? '' : reason === 'empty' ? ' (réponse vide)' : typeof details?.status === 'number' ? ` (code ${details.status}${typeof details.detail === 'string' ? ` : ${details.detail}` : ''})` : ''
-  return new AiError(kind, MESSAGES[kind] + extra)
+  const quotaDetail = kind === 'model-quota' && typeof details?.detail === 'string' ? ` (${details.detail})` : ''
+  return new AiError(kind, MESSAGES[kind] + extra + quotaDetail)
 }
 
 export const aiMessage = (k: AiErrorKind) => MESSAGES[k]
