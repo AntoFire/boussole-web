@@ -43,7 +43,9 @@ export function toAiError(e: unknown): AiError {
   // précision utile au diagnostic : réponse vide, ou code HTTP renvoyé par le fournisseur
   const extra = kind !== 'unavailable' ? '' : reason === 'empty' ? ' (réponse vide)' : typeof details?.status === 'number' ? ` (code ${details.status}${typeof details.detail === 'string' ? ` : ${details.detail}` : ''})` : ''
   const quotaDetail = kind === 'model-quota' && typeof details?.detail === 'string' ? ` (${details.detail})` : ''
-  return new AiError(kind, MESSAGES[kind] + extra + quotaDetail)
+  // erreur imprévue : on affiche le code Firebase pour pouvoir la retrouver dans les journaux
+  const unknown = kind === 'unknown' && code ? ` (${code})` : ''
+  return new AiError(kind, MESSAGES[kind] + extra + quotaDetail + unknown)
 }
 
 export const aiMessage = (k: AiErrorKind) => MESSAGES[k]

@@ -69,7 +69,9 @@ export const ai = onCall(
       }
     } catch (e) {
       const err = toHttps(e)
-      logger.warn('ai', { task, ms: Date.now() - t0, ok: false, code: err.code, llm: e instanceof LlmError ? { code: e.code, status: e.status, detail: e.detail } : undefined })
+      // cause des exceptions imprévues (jamais le texte du cours : les messages d'erreur n'en contiennent pas)
+      const bug = e instanceof HttpsError || e instanceof LlmError || e instanceof InvalidOutputError ? undefined : e instanceof Error ? `${e.name}: ${e.message}`.slice(0, 300) : String(e).slice(0, 300)
+      logger.warn('ai', { task, ms: Date.now() - t0, ok: false, code: err.code, bug, llm: e instanceof LlmError ? { code: e.code, status: e.status, detail: e.detail } : undefined })
       throw err
     }
   },

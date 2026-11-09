@@ -29,6 +29,10 @@ describe('toAiError', () => {
   it('reconnaît une sortie de modèle invalide', () => {
     expect(k('internal', 'invalid-output')).toBe('invalid-output')
   })
+  it('montre le code Firebase d’une erreur imprévue', () => {
+    expect(toAiError({ code: 'functions/internal' }).message).toContain('(internal)')
+    expect(toAiError(new Error('x')).message).not.toContain('(')
+  })
   it('garde une AiError telle quelle et ne fuit rien d’une erreur inconnue', () => {
     const a = new AiError('local', 'x')
     expect(toAiError(a)).toBe(a)
