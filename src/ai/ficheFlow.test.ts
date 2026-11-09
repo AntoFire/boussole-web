@@ -21,7 +21,7 @@ describe('generateFiche', () => {
     expect([...firsts].sort((a, b) => a - b)).toEqual(firsts)
     expect(progress[0]).toBe('0/' + r.parts.length)
     expect(progress.at(-1)).toBe(`${r.parts.length}/${r.parts.length}`)
-    expect(call.mock.calls.every(([q]) => q.task === 'fiche' && q.text.length <= 40_000)).toBe(true)
+    expect(call.mock.calls.every(([q]) => q.task === 'fiche' && q.text.length <= 20_000)).toBe(true)
   })
   it('patiente puis réessaie quand la limite par minute est atteinte', async () => {
     const chunks = buildChunks(pages(1))

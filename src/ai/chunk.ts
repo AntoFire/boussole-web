@@ -15,7 +15,7 @@ export interface Chunk {
 /** Taille d'un morceau stocké (et plus tard retrouvé par le tuteur). */
 export const CHUNK_CHARS = 10_000
 /** Taille maximale du texte envoyé au modèle en un appel. */
-export const BATCH_CHARS = 40_000
+export const BATCH_CHARS = 20_000
 /** En dessous, le PDF est considéré comme sans texte exploitable. */
 export const MIN_TEXT_CHARS = 200
 const EMPTY_PAGE = 20

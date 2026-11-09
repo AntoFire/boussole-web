@@ -4,7 +4,7 @@ import { groupBatches, pageRange, type Chunk } from './chunk'
 import type { AiRequest, Fiche } from './types'
 
 /** Au-delà, le cours est trop long pour une seule fiche (chaque lot est un appel du quota quotidien). */
-export const MAX_BATCHES = 8
+export const MAX_BATCHES = 12
 
 export interface FichePart {
   pages: string
