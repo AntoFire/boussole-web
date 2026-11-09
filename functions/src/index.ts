@@ -52,9 +52,9 @@ export const ai = onCall(
       task = req.task
       await reserve(uid)
       const apiKey = OPENROUTER_API_KEY.value()
-      const main = createOpenRouter({ apiKey, model: AI_MODEL.value() })
-      const spare = AI_MODEL_FALLBACK.value()
-      const llm: LlmProvider = spare && spare !== AI_MODEL.value() ? withFallback(main, createOpenRouter({ apiKey, model: spare })) : main
+      // modèle principal, puis les modèles de repli (liste séparée par des virgules) dans l'ordre
+      const spares = AI_MODEL_FALLBACK.value().split(',').map((m) => m.trim()).filter((m) => m && m !== AI_MODEL.value())
+      const llm: LlmProvider = spares.reduce<LlmProvider>((chain, model) => withFallback(chain, createOpenRouter({ apiKey, model })), createOpenRouter({ apiKey, model: AI_MODEL.value() }))
       switch (req.task) {
         case 'ping': {
           const r = await llm.complete({ messages: [{ role: 'user', content: 'Réponds uniquement par le mot : pong' }], maxTokens: 512, temperature: 0 })
