@@ -10,7 +10,7 @@ const LABELS: Record<string, string> = {
   concepts: 'notions', evals: 'échéances', flash: 'cartes Flash', sources: 'sources', flashcfg: 'réglages des chapitres',
   flashprog: 'progression Flash', journal: 'journal', chprog: 'chapitres', rewards: 'récompenses', exam: 'examens',
   examrun: 'simulations', exambank: 'banque d’exercices', exampm: 'bilans d’examen', baseline: 'tests de départ',
-  stats: 'statistiques', bilans: 'bilans',
+  stats: 'statistiques', bilans: 'bilans', cdocs: 'cours importés', cdocchunks: 'morceaux de cours',
 }
 
 function fmtDate(iso: string | null) {

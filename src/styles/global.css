@@ -322,3 +322,13 @@ a.focus-row,a.chrow,a.crow,a.fl-cta{text-decoration:none;color:var(--ink)}
 .nav-sub .nm{flex:1;min-width:0;line-height:1.25;display:flex;flex-direction:column}
 .nav-sub .nm .nav-lv{margin:2px 0 0;font-weight:600}
 .nav-lv,.nav-sub .count{white-space:nowrap;flex:none}
+
+/* Fiche générée par l'IA */
+.fiche-ai h4{margin:10px 0 2px;font:700 17px var(--f-display)}
+.fiche-ai h5{margin:12px 0 4px;font:700 15px var(--f-display);color:var(--accent)}
+.fiche-ai dl{margin:4px 0}
+.fiche-ai dt{font-weight:700;font-size:15px}
+.fiche-ai dd{margin:0 0 6px;color:var(--ink2);font-size:15px}
+.fiche-f{background:var(--sunk);border-radius:6px;padding:4px 8px;margin:4px 0;font-size:14px;overflow-x:auto;white-space:pre-wrap}
+.fiche-sum{background:var(--accent-soft);border-radius:8px;padding:8px 12px;margin:10px 0 0}
+.fiche-ai section+section{border-top:1px solid var(--line);margin-top:14px;padding-top:6px}

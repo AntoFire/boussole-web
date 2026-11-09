@@ -26,6 +26,9 @@ describe('toAiError', () => {
   it('ajoute le détail du fournisseur au quota du modèle', () => {
     expect(toAiError({ code: 'functions/resource-exhausted', details: { reason: 'model', detail: 'free-models-per-day' } }).message).toContain('free-models-per-day')
   })
+  it('reconnaît une sortie de modèle invalide', () => {
+    expect(k('internal', 'invalid-output')).toBe('invalid-output')
+  })
   it('garde une AiError telle quelle et ne fuit rien d’une erreur inconnue', () => {
     const a = new AiError('local', 'x')
     expect(toAiError(a)).toBe(a)

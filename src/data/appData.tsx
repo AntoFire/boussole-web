@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type {
-  BaselineDoc, Bilan, ChaptersCfg, ChProg, Concept, Evaluation, FlashCard, FlashProg, FlashSource, JournalEntry, Reward, RewardsDoc, StatsDoc,
+  BaselineDoc, Bilan, CDoc, ChaptersCfg, ChProg, Concept, Evaluation, FlashCard, FlashProg, FlashSource, JournalEntry, Reward, RewardsDoc, StatsDoc,
 } from '../domain/types'
 import { useStore } from './provider'
 import type { WithId } from './store'
@@ -22,6 +22,8 @@ export interface AppData {
   /** progression par chapitre, indexée par « COURSE-n » */
   chprog: Record<string, Partial<ChProg>>
   rewards: Reward[]
+  /** cours importés (PDF), indexés par id */
+  cdocs: Record<string, CDoc>
 }
 
 export const emptyProg = (): FlashProg => ({ cards: {}, days: {}, xp: 0, hist: [], cascade: {} })
@@ -54,6 +56,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [bilans, setBilans] = useState<Raw<Omit<StoredBilan, 'id'>> | null>(null)
   const [chprog, setChprog] = useState<Raw<Partial<ChProg>> | null>(null)
   const [rewards, setRewards] = useState<RewardsDoc | null | undefined>(undefined)
+  const [cdocs, setCdocs] = useState<Raw<Omit<CDoc, 'id'>> | null>(null)
 
   useEffect(() => {
     const err = (e: Error) => console.error(e)
@@ -70,13 +73,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       store.subscribeCollection<Omit<StoredBilan, 'id'>>('bilans', setBilans, err),
       store.subscribeCollection<Partial<ChProg>>('chprog', setChprog, err),
       store.subscribeDoc<RewardsDoc>('rewards/main', setRewards, err),
+      store.subscribeCollection<Omit<CDoc, 'id'>>('cdocs', setCdocs, err),
     ]
     return () => offs.forEach((o) => o())
   }, [store])
 
   const value = useMemo<AppData>(() => {
     const ready =
-      [concepts, evals, flash, sources, journal, baselines, bilans, chprog].every((x) => x !== null) &&
+      [concepts, evals, flash, sources, journal, baselines, bilans, chprog, cdocs].every((x) => x !== null) &&
       cfg !== undefined && prog !== undefined && stats !== undefined && rewards !== undefined
     return {
       ready,
@@ -92,8 +96,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       bilans: Object.fromEntries((bilans ?? []).map((b) => [b.id, b as unknown as StoredBilan])),
       chprog: Object.fromEntries((chprog ?? []).map(({ id, ...doc }) => [id, doc])),
       rewards: Array.isArray(rewards?.items) ? rewards.items : [],
+      cdocs: Object.fromEntries((cdocs ?? []).map(({ id, ...doc }) => [id, doc as CDoc])),
     }
-  }, [concepts, evals, flash, sources, cfg, prog, journal, baselines, stats, bilans, chprog, rewards])
+  }, [concepts, evals, flash, sources, cfg, prog, journal, baselines, stats, bilans, chprog, rewards, cdocs])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

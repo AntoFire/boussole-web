@@ -20,7 +20,7 @@ const MESSAGES: Record<AiErrorKind, string> = {
   timeout: 'Le modèle met trop de temps à répondre. Réessaie.',
   unavailable: 'Le modèle est indisponible pour le moment.',
   invalid: 'Demande refusée par le serveur.',
-  'invalid-output': 'Réponse inattendue du serveur.',
+  'invalid-output': 'Le modèle n’a pas produit de résultat exploitable. Réessaie.',
   unknown: 'Erreur inattendue de l’IA.',
 }
 
@@ -31,7 +31,8 @@ export function toAiError(e: unknown): AiError {
   const details = (e as { details?: { reason?: unknown; status?: unknown; detail?: unknown } })?.details
   const reason = details?.reason
   const kind: AiErrorKind =
-    code === 'unauthenticated' ? 'auth'
+    reason === 'invalid-output' ? 'invalid-output'
+    : code === 'unauthenticated' ? 'auth'
     : code === 'permission-denied' ? 'denied'
     : code === 'resource-exhausted' ? (reason === 'day' ? 'quota' : reason === 'model' ? 'model-quota' : 'rate')
     : code === 'deadline-exceeded' ? 'timeout'

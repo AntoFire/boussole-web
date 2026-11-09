@@ -1,3 +1,5 @@
+import type { Fiche } from '../ai/types'
+
 export type CourseKey = 'STT' | 'GIF' | 'IFT' | 'SIO' | 'MATH' | 'BASES'
 export type Status = 'rouge' | 'jaune' | 'vert' | 'consolide'
 
@@ -143,6 +145,35 @@ export interface ChProg {
   points?: string[]
   blank?: BlankRun[]
   read?: Record<string, unknown>
+  /** Fiche de révision générée par l'IA, enregistrée après relecture. */
+  aiFiche?: AiFiche
+}
+
+/** Fiche IA d'un chapitre : une partie par lot de pages du cours. */
+export interface AiFiche {
+  /** cours d'origine (document `cdocs`) */
+  docId: string
+  model: string
+  created: string
+  parts: { pages: string; fiche: Fiche }[]
+}
+
+/** Cours importé (PDF) : métadonnées. Le texte est dans `cdocchunks/{docId}-{n}`. */
+export interface CDoc {
+  course: CourseKey
+  ch: number
+  name: string
+  pages: number
+  chars: number
+  chunks: number
+  created: string
+}
+export interface CDocChunk {
+  docId: string
+  n: number
+  p1: number
+  p2: number
+  text: string
 }
 export interface Reward {
   t: string

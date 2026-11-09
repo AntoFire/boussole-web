@@ -5,7 +5,7 @@ export type Dump = Record<string, Record<string, unknown>>
 /** Collections de Boussole (les mêmes que l'artifact). */
 export const KNOWN_COLLECTIONS = [
   'concepts', 'evals', 'flash', 'sources', 'flashcfg', 'flashprog', 'journal', 'baseline', 'stats', 'bilans',
-  'chprog', 'rewards', 'exam', 'examrun', 'exambank', 'exampm',
+  'chprog', 'rewards', 'exam', 'examrun', 'exambank', 'exampm', 'cdocs', 'cdocchunks',
 ] as const
 
 /** Accès aux données. Les chemins sont de la forme « collection/id ». */

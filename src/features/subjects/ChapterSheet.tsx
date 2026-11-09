@@ -15,6 +15,7 @@ import { Drill } from '../flash/Drill'
 import { useRecordFlash } from '../flash/useRecord'
 import { BlankPanel } from './BlankPanel'
 import { ExamQuiz } from './ExamQuiz'
+import { FichePanel } from '../ai/FichePanel'
 import { LvBadge } from './parts'
 
 function parseCh(v: string | null): { c: CourseKey; n: number } | null {
@@ -156,8 +157,9 @@ function ChapterSheet({ c, n, onClose, onRecall, onExam }: { c: CourseKey; n: nu
               </div>
             ))
           ) : (
-            <p className="small muted">Pas encore de support du prof pour ce chapitre. Bientôt : dépose le PDF ici, l’appli en tirera la fiche et les questions.</p>
+            <p className="small muted">Pas encore de lien vers un support du prof pour ce chapitre. Tu peux importer le PDF ci-dessous : l’appli en tire une fiche.</p>
           )}
+          <FichePanel c={c} n={n} label={label} />
           <label className="small muted" htmlFor="ch-sum" style={{ display: 'block', marginTop: 10 }}>Ce que tu retiens, en une phrase</label>
           <input id="ch-sum" className="inp" value={sum} onChange={(e) => setSum(e.target.value)} placeholder="Ex. : un embedding place les mots proches dans l’espace…" />
           <div className="row" style={{ marginTop: 8 }}>

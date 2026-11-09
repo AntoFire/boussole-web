@@ -8,6 +8,7 @@ import { withFallback } from './llm/fallback.js'
 import { createOpenRouter } from './llm/openrouter.js'
 import { LlmError, type LlmProvider } from './llm/provider.js'
 import { AiRequest } from './schemas.js'
+import { InvalidOutputError, runFiche } from './tasks/fiche.js'
 import { dayKey, reserveCall, type Usage } from './usage.js'
 
 if (!getApps().length) initializeApp()
@@ -27,6 +28,7 @@ async function reserve(uid: string): Promise<void> {
 
 function toHttps(e: unknown): HttpsError {
   if (e instanceof HttpsError) return e
+  if (e instanceof InvalidOutputError) return new HttpsError('internal', 'Sortie du modèle invalide', { reason: 'invalid-output' })
   if (e instanceof LlmError) {
     if (e.code === 'rate-limited') return new HttpsError('resource-exhausted', 'Quota du modèle atteint', { reason: 'model', detail: e.detail })
     if (e.code === 'timeout') return new HttpsError('deadline-exceeded', 'Le modèle a mis trop de temps')
@@ -38,7 +40,7 @@ function toHttps(e: unknown): HttpsError {
 
 /** Point d'entrée unique de l'IA : contrôle d'accès, validation, quota, puis tâche. */
 export const ai = onCall(
-  { region: REGION, secrets: [OPENROUTER_API_KEY], timeoutSeconds: 120, memory: '256MiB', maxInstances: 2, enforceAppCheck: false },
+  { region: REGION, secrets: [OPENROUTER_API_KEY], timeoutSeconds: 300, memory: '256MiB', maxInstances: 2, enforceAppCheck: false },
   async (request) => {
     const t0 = Date.now()
     let task = 'unknown'
@@ -58,6 +60,11 @@ export const ai = onCall(
           const r = await llm.complete({ messages: [{ role: 'user', content: 'Réponds uniquement par le mot : pong' }], maxTokens: 512, temperature: 0 })
           logger.info('ai', { task, ms: Date.now() - t0, ok: true, promptTokens: r.promptTokens, completionTokens: r.completionTokens })
           return { task: 'ping' as const, text: r.text.slice(0, 200), model: r.model, ms: Date.now() - t0 }
+        }
+        case 'fiche': {
+          const r = await runFiche(llm, { course: req.course, chapter: req.chapter, text: req.text })
+          logger.info('ai', { task, ms: Date.now() - t0, ok: true, chars: req.text.length })
+          return { task: 'fiche' as const, fiche: r.fiche, model: r.model, ms: Date.now() - t0 }
         }
       }
     } catch (e) {
